@@ -1,62 +1,5 @@
-class Level {
-  constructor(options = {}) {
-    this.name = options.name || '';
-    this.matrix = [];
-    this.init();
-  }
-  init() {
-    this._buildMatrix();
-  }
-  _buildMatrix() {
-    this.matrix = new Array(20).fill(new Array(10).fill(0));
-  }
-}
-
-class Piece {
-  constructor(matrix = {}, fillColor = '') {
-    this.fillColor = fillColor;
-    this.matrix = matrix;
-  }
-  _rotateLeft() {
-    //counter-clockwise
-    let matrix = this.matrix;
-    matrix = this._transpose(matrix);
-    this.matrix = matrix;
-  }
-
-  _rotateRight() {
-    //clockwise
-    let matrix = this.matrix;
-    matrix = this._transpose(matrix);
-    matrix.forEach(row => {
-      row.reverse();
-    });
-    this.matrix = matrix;
-  }
-
-  _transpose(matrix) {
-    return matrix[0].map((x,i) => matrix.map(x => x[i]));
-  }
-
-  rotate(direction) {
-    switch (direction) {
-      case 'right':
-        this._rotateRight()
-        break;
-      case 'left':
-        this._rotateLeft();
-        break;
-    }
-  }
-
-  getFillColor() {
-    return this.fillColor;
-  }
-
-  getMatrix() {
-    return this.matrix;
-  }
-}
+import { Level } from './level';
+import { Piece } from './piece';
 
 //map is 10x x 20y pixels (11 x 21)
 var app = {
@@ -134,6 +77,7 @@ var app = {
     this._initScene();
     this._eventController();
     this.renderPiece();
+
   },
 
   _eventController() {
@@ -225,6 +169,10 @@ var app = {
         x++;
       });
     });
+  },
+
+  renderLevel() {
+
   },
 
   clearCanvas(x = 0, y = 0, width = this.canvas.width, height = this.canvas.height) {
