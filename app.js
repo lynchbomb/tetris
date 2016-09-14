@@ -1,6 +1,60 @@
-class Piece {
-  constructor(matrix) {
+class Level {
+  constructor(options = {}) {
+    this.name = options.name || '';
+    this.matrix = [];
+    this.init();
+  }
+  init() {
+    this._buildMatrix();
+  }
+  _buildMatrix() {
+    this.matrix = new Array(20).fill(new Array(10).fill(0));
+  }
+}
 
+class Piece {
+  constructor(matrix = {}, fillColor = '') {
+    this.fillColor = fillColor;
+    this.matrix = matrix;
+  }
+  _rotateLeft() {
+    //counter-clockwise
+    let matrix = this.matrix;
+    matrix = this._transpose(matrix);
+    this.matrix = matrix;
+  }
+
+  _rotateRight() {
+    //clockwise
+    let matrix = this.matrix;
+    matrix = this._transpose(matrix);
+    matrix.forEach(row => {
+      row.reverse();
+    });
+    this.matrix = matrix;
+  }
+
+  _transpose(matrix) {
+    return matrix[0].map((x,i) => matrix.map(x => x[i]));
+  }
+
+  rotate(direction) {
+    switch (direction) {
+      case 'right':
+        this._rotateRight()
+        break;
+      case 'left':
+        this._rotateLeft();
+        break;
+    }
+  }
+
+  getFillColor() {
+    return this.fillColor;
+  }
+
+  getMatrix() {
+    return this.matrix;
   }
 }
 
@@ -68,34 +122,104 @@ var app = {
   $CANVAS: document.getElementById('canvas'),
   CONTEXT: null,
   MAX_PIECE_COUNT: 10,
-  activePieces: 0,
   DEFAULT_STARTING_COORDS: {
     x: 5,
     y: -1
   },
-
+  activePieces: 0,
+  activePiece: null,
+  level: null,
 
   init() {
+    this._initScene();
+    this._eventController();
+    this.renderPiece();
+  },
+
+  _eventController() {
+    document.addEventListener('keydown', this._handleKeydown.bind(this));
+  },
+
+  _getRandomKey(obj) {
+    let k = Object.keys(obj);
+    return k[this._getRandomIntBetweenIncluding(0, k.length)];
+  },
+
+  _getRandomIntBetweenIncluding(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+
+    return Math.floor(Math.random() * (max - min)) + min;
+  },
+
+  _initScene() {
+    this.level = new Level();
     this.CONTEXT = this.$CANVAS.getContext('2d');
     this.CONTEXT.scale(20, 20);
     this.CONTEXT.fillStyle = '#000';
     this.CONTEXT.fillRect(0, 0, this.$CANVAS.width, this.$CANVAS.height);
-
-    this.buildPiece('Z');
   },
 
-  buildPiece(ID) {
-    let fillColor = this.DB_PIECES[ID].fillColor;
+  _handleKeydown(e) {
+    switch(e.keyCode) {
+      //down
+      case 40:
+        //force piece down
+        console.log('DOWN');
+        this._handleDownArrowKey(e);
+        break;
+      //left
+      case 37:
+        //move left
+        console.log('LEFT');
+        this._handleLeftArrowKey(e);
+        break;
+      //right
+      case 39:
+        //move right
+        console.log('RIGHT');
+        this._handleRightArrowKey(e);
+        break;
+      //L
+      case 76:
+        //rotate left
+        console.log('L');
+        this._handleLKey(e);
+        break;
+      //R
+      case 82:
+        //rotate right
+        console.log('R');
+        this._handleRKey(e);
+        break;
+    }
+  },
+
+  _handleRKey(e) {},
+  _handleLKey(e) {},
+  _handleRightArrowKey(e) {},
+  _handleLeftArrowKey(e) {},
+  _handleDownArrowKey(e) {},
+
+  _collisionDetection() {
+
+  },
+
+  renderPiece() {
     let x = this.DEFAULT_STARTING_COORDS.x;
     let y = this.DEFAULT_STARTING_COORDS.y;
+    let id = this._getRandomKey(this.DB_PIECES);
+    let piece = new Piece(this.DB_PIECES[id].matrix, this.DB_PIECES[id].fillColor);
 
-    this.CONTEXT.fillStyle = fillColor;
+    this.activePiece = piece;
 
-    this.DB_PIECES[ID].matrix.forEach(i => {
+    this.CONTEXT.fillStyle = piece.getFillColor();
+
+    piece.getMatrix().forEach(row => {
       y++;
       x = this.DEFAULT_STARTING_COORDS.x;
-      i.forEach(ii => {
-        if(ii) {
+      row.forEach(item => {
+        if(item) {
           this.CONTEXT.fillRect(x, y, 1, 1);
         }
         x++;
@@ -103,14 +227,15 @@ var app = {
     });
   },
 
-  clearCanvas(x=0, y=0, width=this.canvas.width, height=this.canvas.height) {
+  clearCanvas(x = 0, y = 0, width = this.canvas.width, height = this.canvas.height) {
 		this.canvas.clearRect(x, y, width, height);
 	},
 
   update() {
+    //review ALL code within this method for optimizations and caching possibilites
 		window.requestAnimationFrame(this.update.bind(this));
     if(this.activePieces <= this.MAX_PIECE_COUNT) {
-      this.buildPiece('I');
+      this.renderPiece();
       this.activePieces++;
     }
 		// this.clearCanvas();
